@@ -1,0 +1,371 @@
+--> PSEUDO CODE FOR CHAT APPLICATION 
+
+
+int main()
+{
+	// SERVER ON 8080
+
+	// CREATE A SOCKET
+	
+	sockfd = socket(AF_INET, SOCK_STREAM, 0);
+		
+	if sockfd == -1 
+		print socket creation failed and exit.
+	else
+		print socket successfully created
+	
+	// FILL STRUCTURE OF SOCKET ADDRESS
+	
+	struct sockaddr_in servaddr, cli
+	
+	servaddr.sin_family = AF_INET
+	servaddr.sin_addr.s_addr = htonl(INADDR_ANY)
+	servaddr.sin_port = htons(PORT)
+	
+	// BIND THE SOCKET 
+	
+	if ((bind(sockfd, (struct sockaddr*)&servaddr, sizeof(servaddr))) != 0) 
+		print socket bind failed and exit.
+	else
+		print socket successfully binded.
+	
+	
+	// LISTEN FOR CONNECTIONS
+	
+	if ((listen(sockfd, 5)) != 0) 
+		print failed to listen
+	else
+		print listening.
+		
+			
+	// ACCEPT THE CLIENT
+	
+	connfd = accept(sockfd, (struct sockaddr*)&cli, &len);
+	if (connfd < 0)
+		print server accept failed
+	else
+		print server accepted the client.
+		
+		
+	// CLIENT ON 8081
+	
+	// CREATE A SOCKET
+	
+	clifd = socket(AF_INET, SOCK_STREAM, 0)
+	if (clifd == -1)
+		print failed to create socket
+	else
+		print socket successfully created
+	
+	// FILL STRUCTURE OF SOCKADDR_IN
+	
+	struct sockaddr_in cliaddr
+
+	cliaddr.sin_family = AF_INET;
+	cliaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	cliaddr.sin_port = htons(8081);
+
+	// CONNECT THE SOCKET 
+	
+	if((connect(clifd, (struct sockaddr *)&cliaddr, sizeof(cliaddr))) == -1)
+		print failed to connect
+	else
+		print connected successfully
+	
+	
+	// CREATE THREADS
+	
+	// THREAD FOR READING - SERVER THREAD
+	
+	read_thread()
+	{
+		flag = 1
+		
+		while(flag)
+		{
+		
+			// INITIALIZE BUFFER TO STORE RECIEVED LENGTH AND ALLOCATE MEMORY 		
+			
+			*bufflen = malloc(sizeof int)
+				clear the allocated mem
+			
+			// READ LENGTH OF RECIEVED DATA
+		
+			if((read(*(int *)connfd, bufflen, sizeof(bufflen))) == -1)
+				perror("read")
+		
+			// INITIALIZE AND CLEAR THE BUFFER TO STORE DATA
+		
+			char buffer[len of data recieved]
+		
+			// READ THE DATA AND CHECK THE RETURN VALUE
+		
+			ret = read(*(int *)connfd, buff, sizeof(buff))
+			if(ret == -1)
+				perror("read :");
+				exit(0);
+	
+			// EXIT CONDITTION
+		
+			if(!(strncmp("bye", buff , 3)))
+				exit(0);
+		
+			// FREE THE ALLOCATED BUFFER MEMORIES
+		
+			free(bufflen)
+			free(buff)
+		}
+	}
+	
+				
+	write_thread()
+	{
+		flag = 1
+		
+		while(flag)
+		{
+			
+			// CODE TO TAKE INPUT AND STORE IT DYNAMICALLY INTO BUFFER OF LENGTH OF ENTERED DATA
+			
+			int current_size = max
+			
+			char *buff = malloc(MAX)
+			
+			i = 0 
+			
+			// TAKE INPUT IN BUFFER
+			
+			while((buff[i++] = getchar()) != '\n')
+				if(i == current_size)
+					current_size = i + MAX
+					buff = realloc(buff, current_size)
+			buff[i] = '/0'
+			
+			// GET THE LENGTH OF DATA AND WRITE IT IN SOCKET
+			
+			int *bufflen = &i
+			
+			if((write(*(int *)clifd, bufflen, sizeof(bufflen))) == -1)
+				perror("write")
+			
+			// WRITE THE DATA ONTO THE SOCKET
+			
+			wri1 = write(*(int *)clifd, buff, i);
+			if(wri1 == -1)
+				perror("write")
+			
+			// EXIT CONDITTION
+		
+			if(!(strncmp("bye", buff , 3)))
+				exit(0);
+		
+			// FREE THE ALLOCATED BUFFER MEMORIES
+		
+			free(bufflen)
+			free(buff)
+			
+		}
+	}
+			
+	// BOTH THREADS RUN PARALLELLY TILL THEIR TURN COMES TO EXECUTE (READ OR WRITE DATA) OR EXIT
+
+	// SWITCH CASE MENU FOR SELECTION OF CHAT OR FILE TRANSFER
+
+	choice = 0
+	
+	do
+		
+		// MENU 
+		printf("\n1) Chat.\n2) Send File.\n3) Exit.\n\n Please enter a choice : ");
+		
+		scanf("%d", &choice);
+		
+		// SEND THE SELECTED CHOICE TO THE OTHER APPLICATION IN ORDER TO TELL THEM WHAT WE HAVE SELECTED CHAT OR FILE TRANSFER
+		write(clifd, choice buffer, sizeof choice buffer)
+		clear choice buffer
+		
+		switch(choice)
+		
+			case 1: // CHAT
+				
+				thread1 = pthread_create(&t1, NULL, (void *)writing, (void *)clifd);
+				if(thread1 != 0)
+					perror(thread1)
+				
+				thread2 = pthread_create(&t2, NULL, (void *)reading, (void *)connfd);
+				if(thread1 != 0)
+					perror(thread2)
+					
+				pthread_join(t1, NULL)
+				pthread_join(t2, NULL)
+
+				break;
+
+			case 2: // FILE TRANSFER
+			
+					// function to send file
+					
+					void sendfile(int clifd)
+					{
+						// SENDING THE FILE 
+					
+						// FILE LOCATION AND NAME
+						char loc[MAX] = "";
+						char name[MAX] = "";
+	
+						// FILE SIZE
+						struct stat st;
+	
+						strcat(loc, name);
+	
+						// CHECK IF FILE EXISTS
+						
+						if(access(loc, F_OK | R_OK) != -1)
+						{
+							
+							printf("file is found and can be read..\n")
+							
+							// OPEN FILE LOCATION
+							int fd = open(loc, O_RDONLY)
+							if(fd == -1)
+									printf("error in opening fd\n")
+						
+							// GET FILE LENGTH
+							stat(loc, &st)
+							int *size = malloc(sizeof(int)) 
+							*size = st.st_size
+							
+							// INITIALIZE BUFFER WITH THE SIZE AND CLEAR THE BUFFER
+							char buff[*size]
+							bzero(buff, sizeof(buff))
+	
+	
+							// SEND LENGTH		
+							write(clifd, size, sizeof(size))
+	
+							// READ THE DATA 
+							int len = read(fd, buff, *size)
+							buff[len] = '\0'
+	
+	
+							// SEND FILE
+							int ret = write(clifd, buff, *size)
+							if(ret == -1)
+								printf("write unsuccessful\n")
+							else
+								printf("write successful. File sent\n")
+	
+							// CLEAR THE BUFFER
+							bzero(buff, sizeof(buff))
+						
+							}
+						
+						else
+							printf("file not found\n")
+							
+					}
+				
+				// FUNCTION TO RECIEVE FILE
+				
+				void recvfile(int connfd)
+				{
+				
+					// FILE LOCATION AND NAME
+					
+					char loc[MAX] = ""
+					char name[MAX] = ""
+
+					// INITIALIZE SIZE TO STORE SIZE
+					
+					int *size = malloc(sizeof(int));
+					bzero(size, sizeof(size));	
+
+					// JOIN LOCATION AND NAME 
+					
+					strcat(loc, name);
+
+					// CHECK IF FILE ALREADY EXISTS
+					
+					if(access(loc, F_OK | R_OK) != -1)
+					{
+						printf("file already found\n");
+					}
+					else
+					{	
+						// IF FILE DOES NOT EXIST CREATE IT
+						
+						int fd = open((char *)loc, O_RDWR | O_CREAT);
+						if(fd == -1)
+							printf("error in opening fd\n")						
+		
+						// GET LENGTH
+						
+						if((read(connfd, size, sizeof(size))) == -1)
+							perror("read")
+						else
+							printf("read length success\n");
+
+						// INITIALIZE BUFFER WITH RECIEVED SIZE
+						
+						char *buff = malloc(*size)
+						bzero(buff, *size);
+						
+						// READ DATA
+						
+						int ret = read(connfd, buff, (int)*size);
+						if(ret == -1)
+							printf("read unsuccessful\n");
+							
+						// WRITE TO FILE
+						
+						int len = write(fd, buff, *size);
+						if(len == -1)
+							printf("write unsuccessful\n");		
+						else
+							printf("written to file\n");
+						
+						// CLEAR THE BUFFER
+						
+						bzero(buff, sizeof(size));
+	
+					}
+			}
+				
+
+			case 3: // EXIT
+				
+				close(connfd)
+				close(clifd)
+				close(sockfd)
+				exit(0);
+
+
+
+			default: // CHAT 
+				
+				thread1 = pthread_create(&t1, NULL, (void *)writing, (void *)clifd);
+				if(thread1 != 0)
+					perror(thread1)
+				
+				thread2 = pthread_create(&t2, NULL, (void *)reading, (void *)connfd);
+				if(thread1 != 0)
+					perror(thread2)
+					
+				pthread_join(t1, NULL)
+				pthread_join(t2, NULL)
+
+
+	while(choice)
+	
+	
+	// CLOSE THE FDS OPEN
+	
+	close(sockfd)
+	close(connfd)
+	
+	return 0
+	
+	// EXIT CODE
+}	
+	
+
